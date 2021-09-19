@@ -25,18 +25,20 @@ let pokemonRepository = (function() {
     let ul = document.querySelector('.pokemon-list');
     let listItem = document.createElement('li');
     let button = document.createElement('button');
+    listItem.classList.add('group-list-item');
     button.innerText = pokemon.name;
     button.classList.add('listButton');
+    button.classList.add('btn');
     button.addEventListener('click', () => {
       showDetails(pokemon);
     });
     listItem.appendChild(button);
     ul.appendChild(listItem);
+    $(".btn").attr("data-toggle", "modal");
+    $(".btn").attr("data-target", "#modal-container");
   }
   function loadList() {
-    showLoadingMessage("data");
     return fetch(apiUrl).then(function (response) {
-      hideLoadingMessage();
       return response.json();
     }).then(function (json) {
       json.results.forEach(function (item) {
@@ -51,10 +53,8 @@ let pokemonRepository = (function() {
     })
   }
   function loadDetails(item) {
-    showLoadingMessage("details")
     let url = item.detailsUrl;
     return fetch(url).then(function (response) {
-      hideLoadingMessage();
       return response.json();
     }).then(function (details) {
       // Now we add the details to the item
@@ -68,82 +68,53 @@ let pokemonRepository = (function() {
   }
   function showDetails(pokemon) {
   loadDetails(pokemon).then(function () {
-    /*let type=[];
-     pokemon.types.forEach(function(slot){
-    type.push(slot.type.name);
-  });*/
-    showModal(pokemon.name, 'Height: '+pokemon.height,pokemon.imageFrontUrl,pokemon.imageBackUrl,pokemon.types);
+    showModal(pokemon);
 
 
   });
 }
-function showLoadingMessage(data){
-  console.log("Loading a "+ data)
-}
-function hideLoadingMessage(){
-  console.log("Completed")
-}
-function showModal(title, text , link1, link2, types) {
-  let modalContainer = document.querySelector('#modal-container');
-  modalContainer.addEventListener('click', (e) => {
-    // Since this is also triggered when clicking INSIDE the modal
-    // We only want to close if the user clicks directly on the overlay
-    let target = e.target;
-    if (target === modalContainer) {
-      hideModal();
-    }
-  });
-  // Clear all existing modal content
-  modalContainer.innerHTML = '';
+function showModal(item) {
+  let modalContainer = $('#modal-container');
+  let modalBody = $(".modal-body");
+  let modalTitle = $(".modal-title");
+  let modalHeader = $(".modal-header");
 
-  let modal = document.createElement('div');
-  modal.classList.add('modal');
+  modalTitle.empty();
+  modalBody.empty();
 
-  // Add the new modal content
-  let closeButtonElement = document.createElement('button');
-  closeButtonElement.classList.add('modal-close');
-  closeButtonElement.innerText = 'Close';
-  closeButtonElement.addEventListener('click', hideModal);
+  let nameElement = $("<h1>" + item.name + "</h1>");
+  let imgElementFront = $('<img class="modal-img">');
+  imgElementFront.attr("src",item.imageFrontUrl);
+  let imgElementBack = $('<img class="modal-img">');
+  imgElementBack.attr("src",item.imageBackUrl);
+  let heightElement = $("<p>" + "Height : " + item.height + "</p>");
 
-  let titleElement = document.createElement('h1');
-  titleElement.innerText = title;
-
-  let heightElement = document.createElement('p');
-  heightElement.innerText = text;
-
-  let imgElement1 = document.createElement('img');
-  imgElement1.src = link1;
-  let imgElement2 = document.createElement('img');
-  imgElement2.src = link2;
-
-  let typesElement = document.createElement('p');
-  typesElement.innerText = 'Types:' ;
-  types.forEach(function(slot){
-    let span = document.createElement('span');
-    span.classList.add('type');
-    span.innerText = slot.type.name;
-    span.classList.add(slot.type.name);
-    typesElement.appendChild(span);
+  let typesElement = $("<p>" + "Types : " + "</p>")
+  item.types.forEach(function(slot){
+    let span = $('<span>' + slot.type.name + '</span>');
+    span.addClass('type');
+    span.addClass(slot.type.name);
+    typesElement.append(span);
 });
-/*  + types.forEach(function(slot){
-    console.log(slot.type.name);
- return slot.type.name;
+modalTitle.append(nameElement);
+modalBody.append(imgElementFront);
+modalBody.append(imgElementBack);
+modalBody.append(heightElement);
+modalBody.append(typesElement);
+modalContainer.addClass('is-visible');
+modalContainer.on('click', (e) => {
+  // Since this is also triggered when clicking INSIDE the modal
+  // We only want to close if the user clicks directly on the overlay
+  let target = e.target;
+  if (target === modalContainer) {
+    hideModal();
+  }
+});
 
-});*/
-
-  modal.appendChild(closeButtonElement);
-  modal.appendChild(titleElement);
-  modal.appendChild(heightElement);
-  modal.appendChild(imgElement1);
-  modal.appendChild(imgElement2);
-  modal.appendChild(typesElement);
-  modalContainer.appendChild(modal);
-
-  modalContainer.classList.add('is-visible');
 }
 function hideModal() {
-  let modalContainer = document.querySelector('#modal-container');
-  modalContainer.classList.remove('is-visible');
+  let modalContainer = $('#modal-container');
+  modalContainer.modal('hide');
 }
 window.addEventListener('keydown', (e) => {
   let modalContainer = document.querySelector('#modal-container');
